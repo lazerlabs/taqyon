@@ -1,0 +1,33 @@
+.app {
+  width: min(560px, 92vw);
+  padding: 24px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+button {
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  padding: 10px 14px;
+  font-size: 14px;
+  cursor: pointer;
+  background: #f9fafb;
+}
+
+button:hover {
+  background: #f3f4f6;
+}
+
+.hint {
+  margin-top: 12px;
+  color: #6b7280;
+  font-size: 13px;
+}
+

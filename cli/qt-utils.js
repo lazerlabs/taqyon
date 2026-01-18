@@ -12,6 +12,7 @@ import path from 'path';
 
 /** Supported Qt6 versions (descending order, most recent first) */
 const QT_VERSIONS = [
+  '6.10.1', '6.10.0',
   '6.9.0', '6.8.0', '6.7.0', '6.6.0', '6.5.0', '6.4.0', '6.3.0', '6.2.0'
 ];
 
@@ -21,6 +22,17 @@ const QT_ENV_VARS = ['QTDIR', 'QT_DIR', 'Qt6_DIR'];
 /** Common subdirectories to try if the main path is not valid */
 const QT_SUBDIRS = [
   'macos', 'clang_64', 'gcc_64', 'msvc2019_64', 'lib', 'Qt6'
+];
+
+/** Qt modules required by the backend template */
+const QT_REQUIRED_MODULES = [
+  'Core',
+  'Gui',
+  'Widgets',
+  'Positioning',
+  'WebEngineCore',
+  'WebEngineWidgets',
+  'WebChannel'
 ];
 
 /* ============================================================================
@@ -296,12 +308,100 @@ function detectQt6() {
  */
 function validateQtPath(qtPath) {
   if (!qtPath || typeof qtPath !== 'string') return null;
-  if (isValidQtDir(qtPath)) return qtPath;
+
+  const tryUpwards = (startPath) => {
+    let current = startPath;
+    for (let i = 0; i < 6; i++) {
+      if (isValidQtDir(current)) return current;
+      const parent = path.dirname(current);
+      if (!parent || parent === current) break;
+      current = parent;
+    }
+    return null;
+  };
+
+  const resolved = path.resolve(qtPath);
+
+  // Accept paths that point at a qmake/qtpaths binary or at subdirs like .../lib.
+  try {
+    if (fs.existsSync(resolved) && fs.statSync(resolved).isFile()) {
+      const fromFile = tryUpwards(path.dirname(resolved));
+      if (fromFile) return fromFile;
+    }
+  } catch (_) {}
+
+  const direct = tryUpwards(resolved);
+  if (direct) return direct;
+
+  // Try common subdirectories (and then walk upwards from them too).
   for (const subdir of QT_SUBDIRS) {
-    const fullPath = path.join(qtPath, subdir);
-    if (isValidQtDir(fullPath)) return fullPath;
+    const fullPath = path.join(resolved, subdir);
+    const found = tryUpwards(fullPath);
+    if (found) return found;
   }
+
   return null;
+}
+
+/* ============================================================================
+ * PUBLIC: Qt Module Checks
+ * ========================================================================== */
+
+/**
+ * Best-effort check for a Qt module within a Qt6 installation.
+ * @param {string} qtDir - Qt6 root directory.
+ * @param {string} moduleName - Qt module name (e.g., "WebEngineCore").
+ * @returns {boolean} True if the module is likely present.
+ */
+function hasQtModule(qtDir, moduleName) {
+  if (!qtDir || !moduleName) return false;
+  const libDir = path.join(qtDir, 'lib');
+  const cmakeDir = path.join(libDir, 'cmake', `Qt6${moduleName}`);
+  const frameworkPath = path.join(libDir, `Qt${moduleName}.framework`);
+  const windowsLib = path.join(libDir, `Qt6${moduleName}.lib`);
+  const macDylib = path.join(libDir, `libQt6${moduleName}.dylib`);
+  const staticLib = path.join(libDir, `libQt6${moduleName}.a`);
+
+  if (fs.existsSync(cmakeDir)) return true;
+  if (fs.existsSync(frameworkPath)) return true;
+  if (fs.existsSync(windowsLib)) return true;
+  if (fs.existsSync(macDylib)) return true;
+  if (fs.existsSync(staticLib)) return true;
+
+  try {
+    if (fs.existsSync(libDir)) {
+      const entries = fs.readdirSync(libDir);
+      const soPrefix = `libQt6${moduleName}.so`;
+      const dylibPrefix = `libQt6${moduleName}.dylib`;
+      const libPrefix = `Qt6${moduleName}.lib`;
+      return entries.some((entry) =>
+        entry.startsWith(soPrefix) ||
+        entry.startsWith(dylibPrefix) ||
+        entry.startsWith(libPrefix)
+      );
+    }
+  } catch (_) {
+    return false;
+  }
+
+  return false;
+}
+
+/**
+ * Checks a Qt6 installation for required modules.
+ * @param {string} qtDir - Qt6 root directory.
+ * @param {string[]} [modules] - Module list to verify.
+ * @returns {{found: Record<string, boolean>, missing: string[]}}
+ */
+function getQtModuleStatus(qtDir, modules = QT_REQUIRED_MODULES) {
+  const found = {};
+  const missing = [];
+  for (const moduleName of modules) {
+    const ok = hasQtModule(qtDir, moduleName);
+    found[moduleName] = ok;
+    if (!ok) missing.push(moduleName);
+  }
+  return { found, missing };
 }
 
 /* ============================================================================
@@ -310,5 +410,6 @@ function validateQtPath(qtPath) {
 
 export {
     detectQt6, isValidQtDir, QT_ENV_VARS,
-    QT_SUBDIRS, QT_VERSIONS, validateQtPath
+    QT_SUBDIRS, QT_VERSIONS, validateQtPath,
+    QT_REQUIRED_MODULES, getQtModuleStatus
 };

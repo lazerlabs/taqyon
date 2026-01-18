@@ -2,7 +2,7 @@
 
 This document details how the C++ `BackendObject` class is implemented to support the shared counter example, enabling interaction with a JavaScript frontend via QWebChannel.
 
-Refer to `templates/src/backendobject.h` and `templates/src/backendobject.cpp` for the source code.
+Refer to `templates/src-taqyon/backend/backendobject.h` and `templates/src-taqyon/backend/backendobject.cpp` for the source code.
 
 ## Core Components of `BackendObject`
 

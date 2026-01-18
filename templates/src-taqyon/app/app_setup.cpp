@@ -17,7 +17,7 @@ void setupCommandLineParser(QCommandLineParser &parser)
     QCommandLineOption logFileOption(QStringList() << "l" << "log", "Write logs to <file>", "file");
     parser.addOption(logFileOption);
 
-    QCommandLineOption devServerOption(QStringList() << "d" << "dev-server", "Connect to dev server at <url>", "url", "http://localhost:3000");
+    QCommandLineOption devServerOption(QStringList() << "d" << "dev-server", "Connect to dev server at <url>", "url", "http://127.0.0.1:5173");
     parser.addOption(devServerOption);
 
     QCommandLineOption frontendPathOption(QStringList() << "f" << "frontend-path", "Path to frontend dist directory", "path");
@@ -62,15 +62,15 @@ QUrl resolveFrontendUrl(const QCommandLineParser &parser)
         frontendPath = parser.value("frontend-path");
         qInfo() << "Using provided frontend path:" << frontendPath;
     } else {
-        frontendPath = QCoreApplication::applicationDirPath() + "/../frontend/dist";
+        frontendPath = QCoreApplication::applicationDirPath() + "/../src/dist";
         QDir frontendDir(frontendPath);
         if (!frontendDir.exists()) {
             QStringList possiblePaths = {
-                QCoreApplication::applicationDirPath() + "/frontend/dist",
-                QDir::currentPath() + "/frontend/dist",
-                QDir::currentPath() + "/../frontend/dist",
-                QDir::currentPath() + "/../../frontend/dist",
-                QDir::currentPath() + "/../../../frontend/dist"
+                QCoreApplication::applicationDirPath() + "/src/dist",
+                QDir::currentPath() + "/src/dist",
+                QDir::currentPath() + "/../src/dist",
+                QDir::currentPath() + "/../../src/dist",
+                QDir::currentPath() + "/../../../src/dist"
             };
             bool found = false;
             for (const QString &path : possiblePaths) {

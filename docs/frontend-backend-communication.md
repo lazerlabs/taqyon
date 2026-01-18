@@ -4,7 +4,7 @@ This document explains how the JavaScript/TypeScript frontend communicates with 
 
 ## Core Concept: QWebChannel
 
-Communication is facilitated by Qt\'s `QWebChannel` and `QWebChannelView` (part of the WebEngine module). The `qwebchannel-bridge.js` file in your frontend\'s `src` directory provides a helper function, `setupQtConnection()`, to simplify establishing this connection.
+Communication is facilitated by Qt\'s `QWebChannel` and the Qt WebEngine view that hosts your frontend (Chromium-based). The `qwebchannel-bridge.js` file in your frontend\'s `src` directory provides a helper function, `setupQtConnection()`, to simplify establishing this connection.
 
 **Key Steps in `qwebchannel-bridge.js`:**
 1.  **Loads `qwebchannel.js`**: This is Qt\'s client-side library for QWebChannel, typically loaded into the `public` directory of your frontend.

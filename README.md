@@ -1,6 +1,6 @@
 # Taqyon CLI – Scaffold Qt/C++ + JS/TS Desktop Apps (Tauri-style)
 
-Taqyon is a CLI tool for rapidly scaffolding cross-platform desktop applications with a modern JavaScript or TypeScript frontend (React, Vue, or Svelte—your choice) and a native Qt/C++ backend. Inspired by Tauri, Taqyon orchestrates both parts for seamless development, build, and packaging.
+Taqyon is a CLI tool for rapidly scaffolding cross-platform desktop applications with a modern JavaScript or TypeScript frontend (React, Vue, or Svelte—your choice) and a native Qt/C++ backend. Inspired by Tauri, Taqyon orchestrates both parts for seamless development, build, and packaging. Instead of the OS webview, it targets Qt WebEngine (Chromium-based), giving a consistent renderer across platforms and a QWebChannel bridge to the C++ backend.
 **You can select either JavaScript or TypeScript for your frontend at project creation.**
 
 ---
@@ -47,7 +47,7 @@ Follow these steps to create a new desktop application with Taqyon:
 4. **Install dependencies:**
    ```sh
    npm install
-   cd frontend && npm install && cd ..
+   cd src && npm install && cd ..
    ```
 
 5. **Run the application:**
@@ -83,6 +83,7 @@ This approach ensures your app will build with any Qt6 installation, even withou
 - **Rapidly bootstrap** a new desktop app with a minimal Qt/C++ backend and a modern JavaScript or TypeScript frontend (your choice at project creation).
 - **Unified workflow:** One CLI, one project structure, cross-platform scripts.
 - **Customizable:** Choose your frontend framework and language, skip frontend/backend, and extend as needed.
+- **Consistent rendering:** Qt WebEngine provides a Chromium-based runtime (similar to Electron’s renderer, but driven by a C++/Qt backend rather than Node).
 - **Modern native UI features:** Includes a minimal menu bar (Help > About), a working About dialog, and a system tray icon with Show and Quit actions.
 
 ---
@@ -165,17 +166,16 @@ Taqyon CLI - Project Scaffolding
 ❯ TypeScript
   JavaScript
 # (User selects TypeScript, for example)
-Copied Vue template from templates/frontend/vue-ts to frontend/
-Frontend scaffolding complete: frontend/ (vue-ts)
+Copied Vue template from templates/frontend/vue-ts to src/
+Frontend scaffolding complete: src/ (vue-ts)
 
 Qt6 found at: /path/to/qt6
-Created build helper script: src/build.sh
+Created build helper script: src-taqyon/build.sh
 Backend scaffolding complete:
-  src/CMakeLists.txt
-  src/main.cpp
-  src/main_basic.cpp
-  src/backendobject.h
-  src/backendobject.cpp
+  src-taqyon/CMakeLists.txt
+  src-taqyon/app/main.cpp
+  src-taqyon/backend/backendobject.h
+  src-taqyon/backend/backendobject.cpp
 
 Project scaffolded successfully!
 Navigate to your project with: cd my-app
@@ -188,26 +188,19 @@ Done.
 
 ```
 my-app/
-  frontend/
-    react-js/         # React (JavaScript) template
-    react-ts/         # React (TypeScript) template
-    vue-js/           # Vue (JavaScript) template
-    vue-ts/           # Vue (TypeScript) template
-    svelte-js/        # Svelte (JavaScript) template
-    svelte-ts/        # Svelte (TypeScript) template
-    ...               # Only one subdirectory is created, matching your choices
-                      # (e.g., frontend/vue-ts/ if you chose Vue + TypeScript)
-  src/                # Qt/C++ backend
+  src/                # Frontend (Vite app root)
+    ...               # One template is created here (React/Vue/Svelte + JS/TS)
+  src-taqyon/         # Qt/C++ backend
     CMakeLists.txt    # Build configuration
-    main.cpp          # Main file (with WebEngine)
-    main_basic.cpp    # Alternative main file (without WebEngine)
-    backendobject.h
-    backendobject.cpp
     app/
+      main.cpp        # Main file (with WebEngine)
       mainwindow.h    # MainWindow class: main app window, menu bar, About dialog, tray icon
       mainwindow.cpp
       app_setup.h     # App setup helpers (separates setup logic from UI)
       app_setup.cpp
+    backend/
+      backendobject.h
+      backendobject.cpp
     build.sh/bat      # Build script with correct Qt path
   .taqyonrc           # Stores detected Qt path
   package.json        # Scripts for both parts
@@ -215,10 +208,10 @@ my-app/
 ```
 
 > **Template directory naming:**
-> The frontend directory will contain a subdirectory named `<framework>-<language>`, e.g., `react-ts`, `vue-js`, or `svelte-ts`, depending on your selections.
+> The `src/` directory is populated from the selected template, e.g., `react-ts`, `vue-js`, or `svelte-ts`.
 > - `<framework>`: `react`, `vue`, or `svelte`
 > - `<language>`: `js` (JavaScript) or `ts` (TypeScript)
-> Only the chosen combination is created in your project.
+> Only the chosen combination is created.
 
 
 ---
@@ -255,13 +248,17 @@ These features provide a solid foundation for further customization and extensio
 | `frontend:build`    | Builds frontend                                                                            | ✅              |
 | `app:build`         | Builds backend using CMake with correct Qt path                                            | ✅              |
 | `app:run`           | Runs backend binary                                                                        | ✅              |
+| `app:run:dev`       | Runs backend against a frontend dev server (default `http://127.0.0.1:5173`)               | ✅              |
+| `dev`               | Picks an available dev port and runs frontend + backend together                            | ✅              |
 
 - Scripts use `concurrently`, `cross-env`, and `wait-on` for platform compatibility.
+- `npm run dev` picks an available port (up to 5 attempts) and launches both frontend and backend with the same URL.
 - `npm start` waits for the frontend to be ready before launching the backend.
 
 > **Note:**
 > If you chose to skip frontend scaffolding when creating your project, only use backend-related scripts.
 > If you chose to skip backend scaffolding, only use frontend-related scripts.
+> If you run `npm run app:run:dev`, start `npm run frontend:dev` in another terminal first (or use `npm run dev` to launch both together).
 
 ---
 
@@ -278,7 +275,7 @@ cd my-app
 
 # Install dependencies
 npm install
-cd frontend && npm install && cd ..
+cd src && npm install && cd ..
 
 # Build and run both parts
 npm start
@@ -290,8 +287,8 @@ npm start
 
 - **Qt not found:**  
   If Qt6 wasn't detected during project creation:
-  - Edit `.taqyonrc` to update the Qt6 path
-  - Edit `src/build.sh` or `src/build.bat` with the correct path
+- Edit `.taqyonrc` to update the Qt6 path
+- Edit `src-taqyon/build.sh` or `src-taqyon/build.bat` with the correct path
 
 - **CMake errors:**  
   Check that CMake is installed and up to date. Use `cmake --version` to verify.
@@ -300,13 +297,13 @@ npm start
   The backend will automatically fall back to a basic Qt UI if WebEngine modules aren't available. No action needed.
 
 - **"Could not read package.json" error when running `npm start`:**
-  This occurs if you run `npm start` or other frontend-related scripts but the `frontend/` directory doesn't exist.
+This occurs if you run `npm start` or other frontend-related scripts but the `src/` directory doesn't exist.
   **Solution:**
     - Only run backend-related scripts if you skipped frontend scaffolding
     - Only run frontend-related scripts if you skipped backend scaffolding
 
 - **Port conflicts:**  
-  The backend expects the frontend dev server at `localhost:3000`. Change the port in frontend config if needed and update `main.cpp` accordingly.
+  The backend expects the frontend dev server at `localhost:5173`. Change the port in frontend config if needed and update `main.cpp` accordingly.
 
 - **Windows-specific:**  
   Use Git Bash or WSL for a Unix-like shell, or ensure all tools are in your system PATH.

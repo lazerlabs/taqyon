@@ -87,6 +87,7 @@ export function setupQtConnection() {
   return new Promise((resolve, reject) => {
     console.log('Setting up Qt connection...');
     let connectionTimeout;
+    let resolved = false;
     let attemptCount = 0;
     const maxAttempts = 20;  // Increase max attempts
     const attemptInterval = 500; // Time between attempts in ms
@@ -108,6 +109,7 @@ export function setupQtConnection() {
       tryQtConnection()
         .then(backend => {
           cleanup();
+          resolved = true;
           console.log('✅ Successfully connected to Qt backend');
           resolve(backend);
         })
@@ -127,6 +129,7 @@ export function setupQtConnection() {
     
     // Set a longer timeout for overall connection attempts
     connectionTimeout = setTimeout(() => {
+      if (resolved) return;
       console.warn('⚠️ Qt connection timed out, falling back to development mode');
       setupDevMode(resolve);
     }, 15000); // 15 seconds total timeout

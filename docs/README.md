@@ -1,6 +1,6 @@
 # Taqyon Documentation
 
-This section provides detailed documentation for various aspects of the Taqyon CLI and project structure.
+This section provides detailed documentation for various aspects of the Taqyon CLI and project structure. Taqyon scaffolds Qt/C++ backends paired with web frontends that run inside Qt WebEngine (Chromium-based) and communicate via QWebChannel.
 
 ## Table of Contents
 

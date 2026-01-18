@@ -1,0 +1,21 @@
+{
+  "name": "hello-react-counter",
+  "version": "1.0.0",
+  "description": "Taqyon example: Qt/C++ backend + React/TS frontend",
+  "scripts": {
+    "frontend:dev": "npm run --if-present --prefix src dev",
+    "frontend:build": "npm run --if-present --prefix src build",
+    "app:build": "cd src-taqyon && chmod +x ./build.sh && ./build.sh",
+    "app:run": "if [ -f src-taqyon/build/bin/hello-react-counter ]; then cd src-taqyon/build/bin && ./hello-react-counter; else echo 'Application executable not found. Make sure to build successfully first.'; fi",
+    "app:run:verbose": "if [ -f src-taqyon/build/bin/hello-react-counter ]; then cd src-taqyon/build/bin && ./hello-react-counter --verbose; else echo 'Application executable not found. Make sure to build successfully first.'; fi",
+    "app:run:dev": "if [ -f src-taqyon/build/bin/hello-react-counter ]; then cd src-taqyon/build/bin && ./hello-react-counter --dev-server http://127.0.0.1:5173 --verbose; else echo 'Application executable not found. Make sure to build successfully first.'; fi",
+    "build": "npm run frontend:build && npm run app:build",
+    "dev": "node scripts/taqyon-dev.js",
+    "start": "npm run build && ABSOLUTE_PATH=\"$(pwd)/src/dist\" && if [ -f src-taqyon/build/bin/hello-react-counter ]; then cd src-taqyon/build/bin && ./hello-react-counter --verbose --frontend-path \"$ABSOLUTE_PATH\"; else echo 'Application executable not found. Make sure to build successfully first.'; fi"
+  },
+  "devDependencies": {
+    "concurrently": "^8.0.0",
+    "cross-env": "^7.0.0",
+    "wait-on": "^7.0.0"
+  }
+}
